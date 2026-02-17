@@ -1,0 +1,8 @@
+{
+  "name": "FM Vintage",
+  "description": "A high-performance, modern e-commerce mobile-responsive web application inspired by Flipkart, featuring a robust product management system, user authentication, and AI-powered product enhancements.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
