@@ -41,11 +41,18 @@ export const smartSearch = async (query: string, availableProducts: string[]) =>
 
 export const aiChat = async (history: ChatMessage[], availableProducts: Product[]) => {
   try {
-    const productContext = availableProducts.map(p => `${p.name} (₹${p.price})`).join(', ');
-    const systemInstruction = `You are "Vintage Assistant", an AI concierge for FM Vintage, a premium marketplace for vintage artifacts. 
-    Your tone is sophisticated, professional, and helpful. 
-    Current Inventory: ${productContext}.
-    Help users find artifacts, explain features, and represent the brand. Keep responses concise and focused on the vintage collection.`;
+    const productContext = availableProducts.map(p => `${p.name} (₹${p.price}, Cat: ${p.category})`).join(', ');
+    const systemInstruction = `You are "Vintage AI Agent", the autonomous task assistant for FM Vintage. 
+    Your mission is to help users with "tuk tak kam" (quick tasks) and navigating the collection.
+    
+    CAPABILITIES:
+    1. Finding Artifacts: Suggest items from inventory: ${productContext}.
+    2. Order Status: If asked about orders, explain that users can track them in the "Account" section or "My Orders" tab.
+    3. Contact: If users want help/WhatsApp, point them to the contact number 7002761845.
+    4. Proactive Advice: Give fashion advice based on vintage trends.
+    
+    TONE: Sophisticated, helpful, and concise. Use brand terms like "Archive", "Artifacts", and "Collective".
+    Always keep responses short and task-focused.`;
 
     const response = await ai.models.generateContent({
       model: 'gemini-3-flash-preview',

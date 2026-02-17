@@ -35,6 +35,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
   const [formData, setFormData] = useState<Partial<Product>>({
     name: '',
     category: 'fashion',
+    subCategory: '',
     price: 0,
     originalPrice: 0,
     images: [],
@@ -120,7 +121,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
 
   const handleSave = () => {
     if (!formData.name || !formData.price || (formData.images?.length || 0) < 1) {
-      alert("Please enter Name, Price and upload at least 1 image (3-5 recommended).");
+      alert("Please enter Name, Price and upload at least 1 image.");
       return;
     }
     
@@ -133,6 +134,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
       images: formData.images || [],
       name: formData.name || '',
       category: formData.category || 'fashion',
+      subCategory: formData.subCategory || '',
       price: formData.price || 0,
       originalPrice: formData.originalPrice || 0,
       description: formData.description || '',
@@ -154,6 +156,7 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
     setFormData({ 
       name: '', 
       category: 'fashion', 
+      subCategory: '',
       price: 0, 
       originalPrice: 0, 
       images: [], 
@@ -254,20 +257,34 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                         </div>
                      </div>
 
-                     {/* Size Selection */}
-                     <div>
-                        <label className="text-[8px] font-bold text-gray-400 uppercase tracking-widest block mb-2">Available Sizes</label>
-                        <div className="flex flex-wrap gap-2">
-                           {AVAILABLE_SIZES.map(size => (
-                             <button 
-                               key={size}
-                               onClick={() => toggleSize(size)}
-                               className={`px-3 py-1.5 text-[10px] font-black rounded-sm border transition-all ${formData.sizes?.includes(size) ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white text-gray-400 border-neutral-200'}`}
-                             >
-                               {size}
-                             </button>
-                           ))}
+                     <div className="grid grid-cols-2 gap-4">
+                        <div>
+                           <label className="text-[8px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Category</label>
+                           <select 
+                             className="w-full border-b border-neutral-200 p-2 text-sm focus:border-indigo-600 outline-none uppercase font-bold bg-white" 
+                             value={formData.category} 
+                             onChange={e => setFormData({...formData, category: e.target.value})}
+                           >
+                              <option value="fashion">Fashion</option>
+                              <option value="grocery">Grocery</option>
+                              <option value="home">Home</option>
+                              <option value="toys">Toys</option>
+                           </select>
                         </div>
+                        {formData.category === 'fashion' && (
+                          <div>
+                             <label className="text-[8px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Department</label>
+                             <select 
+                               className="w-full border-b border-neutral-200 p-2 text-sm focus:border-indigo-600 outline-none uppercase font-bold bg-white" 
+                               value={formData.subCategory} 
+                               onChange={e => setFormData({...formData, subCategory: e.target.value})}
+                             >
+                                <option value="">General</option>
+                                <option value="men">Men</option>
+                                <option value="women">Women</option>
+                             </select>
+                          </div>
+                        )}
                      </div>
 
                      <div>
@@ -284,16 +301,6 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                           <label className="text-[8px] font-bold text-gray-400 uppercase tracking-widest block mb-1">MRP Price (₹)</label>
                           <input type="number" className="w-full border-b border-neutral-200 p-2 text-sm focus:border-indigo-600 outline-none font-bold" value={formData.originalPrice} onChange={e => setFormData({...formData, originalPrice: Number(e.target.value)})} />
                         </div>
-                     </div>
-
-                     <div>
-                        <div className="flex justify-between items-center mb-1">
-                          <label className="text-[8px] font-bold text-gray-400 uppercase tracking-widest">Narrative Description</label>
-                          <button onClick={handleAiDescribe} disabled={isAiLoading} className="text-[7px] bg-indigo-600 text-white px-2 py-1 rounded-sm font-black uppercase shadow-sm">
-                            {isAiLoading ? 'Thinking...' : '✨ Use AI'}
-                          </button>
-                        </div>
-                        <textarea className="w-full border border-neutral-100 p-3 text-[11px] h-28 outline-none focus:border-indigo-600 leading-relaxed" value={formData.description} onChange={e => setFormData({...formData, description: e.target.value})} />
                      </div>
 
                      <div className="flex gap-4">
@@ -313,8 +320,8 @@ const AdminPanel: React.FC<AdminPanelProps> = ({
                      <div className="flex-1">
                         <h4 className="text-[10px] font-black uppercase tracking-tight truncate">{p.name}</h4>
                         <div className="flex items-center gap-2 mt-1">
+                          <span className="text-[8px] bg-neutral-100 px-1 rounded-sm text-gray-400 font-black uppercase tracking-widest">{p.category} {p.subCategory ? `• ${p.subCategory}` : ''}</span>
                           <span className="text-[9px] font-bold text-indigo-600 italic">₹{p.price.toLocaleString()}</span>
-                          <span className="text-[8px] text-gray-300 font-bold uppercase">Stock: {p.stock}</span>
                         </div>
                      </div>
                      <div className="flex gap-1">

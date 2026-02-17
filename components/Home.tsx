@@ -27,18 +27,18 @@ const Home: React.FC<HomeProps> = ({ products, onProductClick, onCategoryClick, 
 
   return (
     <div className="bg-white min-h-screen">
-      {/* Categories Horizontal Scroll */}
-      <div className="bg-white mb-2 overflow-x-auto whitespace-nowrap scrollbar-hide flex gap-6 px-4 py-4 border-b">
+      {/* Categories - Optimized for Visibility */}
+      <div className="bg-white mb-2 grid grid-cols-4 gap-2 px-2 py-4 border-b shadow-sm">
         {CATEGORIES.map(cat => (
           <button 
             key={cat.id} 
             onClick={() => onCategoryClick(cat.id)}
-            className="flex flex-col items-center min-w-[60px]"
+            className="flex flex-col items-center justify-center transition-transform active:scale-90"
           >
-            <div className="w-12 h-12 flex items-center justify-center text-xl bg-neutral-100 rounded-full mb-1">
+            <div className="w-14 h-14 flex items-center justify-center text-2xl bg-neutral-50 rounded-2xl mb-1.5 shadow-sm border border-neutral-100">
               {cat.icon}
             </div>
-            <span className="text-[10px] font-bold uppercase text-gray-800">{cat.name}</span>
+            <span className="text-[9px] font-black uppercase text-gray-900 tracking-tighter">{cat.name}</span>
           </button>
         ))}
       </div>
@@ -195,19 +195,24 @@ const Home: React.FC<HomeProps> = ({ products, onProductClick, onCategoryClick, 
            {/* Physical Location Details */}
            <div className="space-y-6">
              <div className="bg-white/5 p-4 rounded-sm border-l-2 border-blue-600">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-2">Archive HQ Location</h4>
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-2">Location</h4>
                 <p className="text-xs font-light leading-relaxed text-neutral-300">
-                  Plot 402, Vintage Lane,<br/>
-                  Curated District, South Mumbai,<br/>
-                  Maharashtra - 400001, India
+                  Lakhipur Town,<br/>
+                  Goalpara, Assam - 783129,<br/>
+                  India
                 </p>
              </div>
 
              <div className="bg-white/5 p-4 rounded-sm border-l-2 border-blue-600">
-                <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-2">Protocol Contact</h4>
+                <h4 className="text-[10px] font-black uppercase tracking-widest text-blue-400 mb-2">Contact</h4>
                 <p className="text-xs font-light text-neutral-300">
                   registry@fmvintage.com<br/>
-                  +91 99999 00000
+                  <a href="https://wa.me/917002761845" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 mt-2 hover:text-green-400 transition-colors w-fit">
+                    <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M.057 24l1.687-6.163c-1.041-1.804-1.588-3.849-1.587-5.946.003-6.556 5.338-11.891 11.893-11.891 3.181.001 6.167 1.24 8.413 3.488 2.245 2.248 3.481 5.236 3.48 8.414-.003 6.557-5.338 11.892-11.893 11.892-1.99-.001-3.951-.5-5.688-1.448l-6.305 1.654zm6.597-3.807c1.676.995 3.276 1.591 5.392 1.592 5.448 0 9.886-4.438 9.889-9.885.002-5.462-4.415-9.89-9.881-9.892-5.452 0-9.887 4.435-9.89 9.884-.001 2.225.586 3.891 1.546 5.45l-1.02 3.711 3.964-.9zM15.111 11.69c-.272-.136-1.608-.792-1.857-.882-.25-.09-.432-.136-.614.136-.182.273-.705.882-.864 1.064-.158.182-.318.204-.59.068-.272-.136-1.15-.424-2.191-1.353-.81-.722-1.356-1.614-1.515-1.886-.159-.272-.017-.42.119-.555.123-.122.272-.318.409-.477.136-.159.182-.272.272-.454.091-.181.045-.341-.023-.477-.068-.136-.614-1.477-.841-2.022-.221-.532-.443-.459-.614-.468l-.523-.009c-.182 0-.477.068-.727.341-.25.272-.954.932-.954 2.272 0 1.341.977 2.636 1.114 2.818.136.182 1.921 2.934 4.653 4.113.65.28 1.157.447 1.551.572.653.208 1.247.178 1.717.108.524-.078 1.608-.659 1.836-1.295.227-.636.227-1.181.159-1.295-.068-.113-.25-.182-.523-.318z"/>
+                    </svg>
+                    <span className="font-bold underline decoration-white/20 underline-offset-4">7002761845</span>
+                  </a>
                 </p>
              </div>
            </div>

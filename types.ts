@@ -3,6 +3,7 @@ export interface Product {
   id: string;
   name: string;
   category: string;
+  subCategory?: string; // e.g., 'men', 'women'
   price: number;
   originalPrice: number;
   discountPercentage: number;

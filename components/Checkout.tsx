@@ -1,12 +1,12 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CartItem, User, Order } from '../types';
 import { INDIAN_STATES } from '../constants';
 
 interface CheckoutProps {
   cart: CartItem[];
   user: User | null;
-  onPlaceOrder: (order: Order) => void;
+  onPlaceOrder: (order) => void;
   onBack: () => void;
 }
 
@@ -15,15 +15,6 @@ const Checkout: React.FC<CheckoutProps> = ({ cart, user, onPlaceOrder, onBack })
   const [isPincodeLoading, setIsPincodeLoading] = useState(false);
   const [isVerifying, setIsVerifying] = useState(false);
   const [verificationStage, setVerificationStage] = useState(0);
-  const [showUpiIdInput, setShowUpiIdInput] = useState(false);
-  const [customerUpiId, setCustomerUpiId] = useState('');
-  const [paymentWaiting, setPaymentWaiting] = useState(false);
-  const [automaticSuccess, setAutomaticSuccess] = useState(false);
-  
-  // Timer state (300 seconds = 5 minutes)
-  const [timeLeft, setTimeLeft] = useState(300);
-  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const autoSuccessTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Address state
   const [addressLine1, setAddressLine1] = useState('');
@@ -33,61 +24,13 @@ const Checkout: React.FC<CheckoutProps> = ({ cart, user, onPlaceOrder, onBack })
   const [subdivision, setSubdivision] = useState('');
   const [stateName, setStateName] = useState('');
   const [mobileNo, setMobileNo] = useState(user?.mobile || '');
-  
-  const [paymentMethod, setPaymentMethod] = useState<'UPI_QR' | 'UPI_ID' | 'COD'>('UPI_QR');
 
   const verificationStatuses = [
-    "Initiating Secure Handshake",
-    "Awaiting Banking Confirmation",
+    "Finalizing Acquisition Record",
+    "Securing Logistic Channel",
     "Verifying Encrypted Payload",
-    "Payment Successfully Captured",
-    "Finalizing Acquisition Record"
+    "Order Successfully Lodged"
   ];
-
-  // Timer logic
-  useEffect(() => {
-    if (paymentWaiting && timeLeft > 0) {
-      timerRef.current = setInterval(() => {
-        setTimeLeft((prev) => prev - 1);
-      }, 1000);
-    } else if (timeLeft === 0) {
-      alert("Payment session expired. Please try again.");
-      resetPaymentState();
-    }
-
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [paymentWaiting, timeLeft]);
-
-  // Simulated Automatic Success Logic
-  useEffect(() => {
-    if (paymentWaiting && !automaticSuccess) {
-      // Simulate bank confirmation after 8 seconds
-      autoSuccessTimeoutRef.current = setTimeout(() => {
-        setAutomaticSuccess(true);
-      }, 8000);
-    }
-    return () => {
-      if (autoSuccessTimeoutRef.current) clearTimeout(autoSuccessTimeoutRef.current);
-    };
-  }, [paymentWaiting]);
-
-  const resetPaymentState = () => {
-    setPaymentWaiting(false);
-    setAutomaticSuccess(false);
-    setShowUpiIdInput(false);
-    setIsVerifying(false);
-    setTimeLeft(300);
-    if (timerRef.current) clearInterval(timerRef.current);
-    if (autoSuccessTimeoutRef.current) clearTimeout(autoSuccessTimeoutRef.current);
-  };
-
-  const formatTime = (seconds: number) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins}:${secs.toString().padStart(2, '0')}`;
-  };
 
   // Automated Pincode Lookup
   useEffect(() => {
@@ -146,7 +89,7 @@ const Checkout: React.FC<CheckoutProps> = ({ cart, user, onPlaceOrder, onBack })
     if (isVerifying && verificationStage < verificationStatuses.length) {
       const timer = setTimeout(() => {
         setVerificationStage(prev => prev + 1);
-      }, 1200);
+      }, 1000);
       return () => clearTimeout(timer);
     } else if (isVerifying && verificationStage === verificationStatuses.length) {
       handleFinish();
@@ -156,7 +99,6 @@ const Checkout: React.FC<CheckoutProps> = ({ cart, user, onPlaceOrder, onBack })
   const totalPrice = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
 
   const handleFinish = () => {
-    const method = paymentMethod === 'UPI_QR' ? 'UPI (QR SCAN)' : paymentMethod === 'UPI_ID' ? `UPI ID (${customerUpiId})` : 'COD';
     const fullAddress = `${addressLine1}${addressLine2 ? ', ' + addressLine2 : ''}, Subdiv: ${subdivision}, Dist: ${district}, ${stateName} - ${pincode}`;
     
     const d = new Date();
@@ -170,36 +112,10 @@ const Checkout: React.FC<CheckoutProps> = ({ cart, user, onPlaceOrder, onBack })
       status: 'Pending',
       date: new Date().toISOString(),
       deliveryDate: d.toISOString(),
-      paymentMethod: method,
+      paymentMethod: 'Standard Checkout',
       address: fullAddress
     };
     onPlaceOrder(newOrder);
-  };
-
-  const startPaymentProcess = () => {
-    if (paymentMethod === 'UPI_QR') {
-      setPaymentWaiting(true);
-    } else if (paymentMethod === 'UPI_ID') {
-      setShowUpiIdInput(true);
-    } else {
-      setIsVerifying(true);
-    }
-  };
-
-  const handleUpiIdSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!customerUpiId.includes('@')) {
-      alert("Please enter a valid UPI ID (e.g. name@bank)");
-      return;
-    }
-    setShowUpiIdInput(false);
-    setPaymentWaiting(true);
-  };
-
-  const confirmPaymentPaid = () => {
-    setIsVerifying(true);
-    setVerificationStage(0);
-    setPaymentWaiting(false);
   };
 
   const isAddressValid = addressLine1 && pincode.length >= 6 && district && stateName && mobileNo.length >= 10;
@@ -225,118 +141,6 @@ const Checkout: React.FC<CheckoutProps> = ({ cart, user, onPlaceOrder, onBack })
                 style={{ width: `${(verificationStage / verificationStatuses.length) * 100}%` }}
               ></div>
            </div>
-        </div>
-      )}
-
-      {/* UPI ID Input Modal */}
-      {showUpiIdInput && (
-        <div className="fixed inset-0 z-[115] bg-black/80 flex items-center justify-center p-6 backdrop-blur-md">
-           <div className="bg-white w-full max-w-xs p-8 rounded-sm shadow-2xl animate-in zoom-in-95">
-              <h3 className="text-sm font-black uppercase tracking-widest text-neutral-900 mb-6 border-b pb-2">UPI ID Protocol</h3>
-              <form onSubmit={handleUpiIdSubmit} className="space-y-6">
-                 <div>
-                    <label className="text-[9px] font-black text-gray-400 uppercase tracking-widest block mb-2">Enter Your UPI Address</label>
-                    <input 
-                      type="text" 
-                      value={customerUpiId}
-                      onChange={(e) => setCustomerUpiId(e.target.value)}
-                      placeholder="username@bank"
-                      className="w-full border-b-2 border-neutral-100 py-3 outline-none focus:border-blue-600 font-bold tracking-widest uppercase text-xs"
-                      autoFocus
-                    />
-                 </div>
-                 <div className="flex gap-4 pt-4">
-                    <button type="button" onClick={() => setShowUpiIdInput(false)} className="flex-1 text-[10px] font-black uppercase tracking-widest text-gray-300">Cancel</button>
-                    <button type="submit" className="flex-1 bg-blue-600 text-white py-3 text-[10px] font-black uppercase tracking-widest shadow-lg">Verify ID</button>
-                 </div>
-              </form>
-           </div>
-        </div>
-      )}
-
-      {/* Global Payment Waiting Overlay */}
-      {paymentWaiting && (
-        <div className="fixed inset-0 z-[110] bg-white flex flex-col items-center justify-start p-6 animate-in slide-in-from-bottom-5 duration-300 overflow-y-auto">
-          {/* Timer Header */}
-          <div className="w-full bg-red-50 border border-red-100 p-4 rounded-sm flex items-center justify-between mb-8 shadow-sm">
-             <div className="flex items-center gap-3">
-                <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></div>
-                <span className="text-[10px] font-black uppercase tracking-widest text-red-600">Payment Session Active</span>
-             </div>
-             <div className="text-xl font-black text-red-600 tabular-nums">
-                {formatTime(timeLeft)}
-             </div>
-          </div>
-
-          <div className="flex-1 flex flex-col items-center text-center w-full max-w-sm">
-            {paymentMethod === 'UPI_QR' ? (
-              <>
-                <h3 className="text-2xl font-black uppercase tracking-tighter mb-1">SCAN THE ARCHIVE QR</h3>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-8">Payable Amount: ₹{totalPrice.toLocaleString()}</p>
-                
-                <div className="relative p-2 bg-white rounded-lg shadow-2xl border border-neutral-100 mb-6">
-                   <div className="border-[6px] border-black rounded-md p-4">
-                      <img 
-                        src="https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=upi://pay?pa=mofidakh@ybl&pn=MOFIDA%20KHATUN&cu=INR" 
-                        className="w-64 h-64 object-contain" 
-                        alt="Archive QR" 
-                      />
-                      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-full flex items-center justify-center border-2 border-black">
-                         <span className="font-black italic text-[10px]">FMV</span>
-                      </div>
-                   </div>
-                </div>
-              </>
-            ) : (
-              <div className="py-10 flex flex-col items-center">
-                 <div className="w-20 h-20 bg-blue-50 text-blue-600 rounded-full flex items-center justify-center mb-8 animate-bounce">
-                    <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" /></svg>
-                 </div>
-                 <h3 className="text-xl font-black uppercase tracking-tighter mb-2">MONEY REQUEST SENT</h3>
-                 <p className="text-xs font-medium text-gray-500 px-10 leading-relaxed mb-4">
-                    A payment request has been sent to <span className="text-blue-600 font-bold">{customerUpiId}</span>. 
-                    Please open your UPI app to complete the transaction.
-                 </p>
-              </div>
-            )}
-
-            {/* Success Signal Area */}
-            <div className={`w-full p-6 rounded-sm border transition-all duration-500 ${automaticSuccess ? 'bg-green-50 border-green-200' : 'bg-neutral-50 border-neutral-100'}`}>
-               <div className="flex items-center justify-center gap-3">
-                  {!automaticSuccess ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-neutral-200 border-t-blue-600 rounded-full animate-spin"></div>
-                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-400">Waiting for Bank Signal...</span>
-                    </>
-                  ) : (
-                    <>
-                      <div className="w-5 h-5 bg-green-600 rounded-full flex items-center justify-center">
-                        <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M5 13l4 4L19 7" /></svg>
-                      </div>
-                      <span className="text-[10px] font-black uppercase tracking-[0.2em] text-green-600">Payment Successfully Detected</span>
-                    </>
-                  )}
-               </div>
-            </div>
-
-            <div className="w-full mt-auto pb-10 space-y-4 pt-10">
-               {automaticSuccess && (
-                 <button 
-                   onClick={confirmPaymentPaid}
-                   className="w-full bg-black text-white py-4 font-black rounded-sm uppercase tracking-[0.2em] text-[10px] shadow-2xl animate-in fade-in zoom-in-95 duration-500"
-                 >
-                   I Have Successfully Paid
-                 </button>
-               )}
-               <button 
-                 onClick={resetPaymentState}
-                 className="w-full bg-white text-gray-300 py-2 font-black rounded-sm uppercase tracking-widest text-[8px]"
-               >
-                 Cancel Payment Session
-               </button>
-               <p className="text-[7px] text-gray-300 font-bold uppercase tracking-[0.4em]">FM VINTAGE SECURE TRANSACTION NODE v4.1</p>
-            </div>
-          </div>
         </div>
       )}
 
@@ -406,75 +210,44 @@ const Checkout: React.FC<CheckoutProps> = ({ cart, user, onPlaceOrder, onBack })
                   disabled={!isAddressValid}
                   className="w-full bg-blue-600 text-white py-4 font-black rounded-sm uppercase tracking-[0.2em] text-[10px] disabled:bg-neutral-100 transition-all shadow-xl"
                 >
-                  Confirm Registry
+                  Continue to Review
                 </button>
               </div>
            </div>
          )}
       </div>
 
-      {/* STEP 2: PAYMENT ARCHIVE */}
+      {/* STEP 2: ORDER REVIEW */}
       <div className="border border-neutral-100 rounded-sm overflow-hidden shadow-sm">
          <div className={`p-4 border-b flex items-center gap-2 ${step === 2 ? 'bg-blue-50/30' : 'bg-white'}`}>
             <span className="bg-blue-600 text-white w-5 h-5 text-[10px] rounded-full flex items-center justify-center">2</span>
-            <span className="font-bold text-xs tracking-widest text-neutral-800">FINANCIAL CLEARANCE</span>
+            <span className="font-bold text-xs tracking-widest text-neutral-800">FINAL REVIEW</span>
          </div>
          {step === 2 && (
            <div className="p-4 space-y-6">
-              <div className="space-y-3">
-                 <button 
-                   onClick={() => setPaymentMethod('UPI_QR')}
-                   className={`w-full p-5 rounded-sm border-2 flex items-center justify-between transition-all ${paymentMethod === 'UPI_QR' ? 'border-blue-600 bg-blue-50' : 'border-neutral-100 hover:bg-neutral-50'}`}
-                 >
-                    <div className="flex items-center gap-4 text-left">
-                       <svg className="w-6 h-6 text-neutral-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v1m0 11v1m5-16v1m0 11v1M4 8h1m11 0h1M4 16h1m11 0h1m-4-8h.01M9 16h.01M9 12h.01M13 12h.01M4 4h4v4H4V4zm0 12h4v4H4v-4zm12 0h4v4h-4v-4zm0-12h4v4h-4V4z" /></svg>
-                       <div>
-                          <p className="text-[11px] font-black uppercase tracking-widest">Scan Archive QR</p>
-                          <p className="text-[8px] font-bold text-gray-400 uppercase">Instant Confirmation</p>
-                       </div>
-                    </div>
-                    {paymentMethod === 'UPI_QR' && <div className="w-3 h-3 bg-blue-600 rounded-full"></div>}
-                 </button>
-
-                 <button 
-                   onClick={() => setPaymentMethod('UPI_ID')}
-                   className={`w-full p-5 rounded-sm border-2 flex items-center justify-between transition-all ${paymentMethod === 'UPI_ID' ? 'border-blue-600 bg-blue-50' : 'border-neutral-100 hover:bg-neutral-50'}`}
-                 >
-                    <div className="flex items-center gap-4 text-left">
-                       <svg className="w-6 h-6 text-neutral-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
-                       <div>
-                          <p className="text-[11px] font-black uppercase tracking-widest">Pay via UPI ID</p>
-                          <p className="text-[8px] font-bold text-gray-400 uppercase">Remote Approval</p>
-                       </div>
-                    </div>
-                    {paymentMethod === 'UPI_ID' && <div className="w-3 h-3 bg-blue-600 rounded-full"></div>}
-                 </button>
-
-                 <button 
-                   onClick={() => setPaymentMethod('COD')}
-                   className={`w-full p-5 rounded-sm border-2 flex items-center justify-between transition-all ${paymentMethod === 'COD' ? 'border-blue-600 bg-blue-50' : 'border-neutral-100 hover:bg-neutral-50'}`}
-                 >
-                    <div className="flex items-center gap-4 text-left">
-                       <svg className="w-6 h-6 text-neutral-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
-                       <div>
-                          <p className="text-[11px] font-black uppercase tracking-widest">Handover Payment</p>
-                          <p className="text-[8px] font-bold text-gray-400 uppercase">Cash on Delivery</p>
-                       </div>
-                    </div>
-                    {paymentMethod === 'COD' && <div className="w-3 h-3 bg-blue-600 rounded-full"></div>}
-                 </button>
+              <div className="bg-neutral-50 p-4 rounded-sm space-y-3">
+                 <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Order Artifacts</h3>
+                 {cart.map(item => (
+                   <div key={item.id} className="flex justify-between items-center text-[10px] font-bold uppercase">
+                      <span className="truncate flex-1 pr-4">{item.name} x{item.quantity}</span>
+                      <span>₹{(item.price * item.quantity).toLocaleString()}</span>
+                   </div>
+                 ))}
+                 <div className="pt-3 border-t border-neutral-200 flex justify-between items-center text-xs font-black">
+                    <span>Total Amount</span>
+                    <span className="text-blue-600">₹{totalPrice.toLocaleString()}</span>
+                 </div>
               </div>
 
               <div className="pt-4 space-y-4">
-                 <div className="flex justify-between items-center text-neutral-400 font-black text-[9px] uppercase tracking-widest">
-                    <span>Total Liability</span>
-                    <span className="text-sm text-neutral-900 italic">₹{totalPrice.toLocaleString()}</span>
-                 </div>
+                 <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest text-center leading-relaxed">
+                   By confirming, you agree to the archive acquisition terms. Your order will be processed for standard delivery.
+                 </p>
                  <button 
-                   onClick={startPaymentProcess}
+                   onClick={() => setIsVerifying(true)}
                    className="w-full bg-blue-600 text-white py-5 font-black rounded-sm uppercase tracking-[0.3em] text-[10px] shadow-2xl active:scale-95 transition-all"
                  >
-                   Authorize Payment
+                   Confirm Order
                  </button>
               </div>
            </div>
