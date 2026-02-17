@@ -3,7 +3,6 @@ export interface Product {
   id: string;
   name: string;
   category: string;
-  subCategory?: string; // e.g., 'men', 'women'
   price: number;
   originalPrice: number;
   discountPercentage: number;
@@ -12,12 +11,10 @@ export interface Product {
   images: string[];
   description: string;
   stock: number;
-  sizes?: string[];
 }
 
 export interface CartItem extends Product {
   quantity: number;
-  selectedSize?: string;
 }
 
 export interface User {
@@ -26,7 +23,6 @@ export interface User {
   mobile: string;
   role: 'user' | 'admin';
   address?: string;
-  profileImage?: string;
 }
 
 export interface Order {
@@ -34,16 +30,10 @@ export interface Order {
   userId: string;
   items: CartItem[];
   totalAmount: number;
-  status: 'Pending' | 'Packed' | 'Shipped' | 'Delivered' | 'Cancelled';
+  status: 'Pending' | 'Shipped' | 'Delivered' | 'Cancelled';
   date: string;
-  deliveryDate?: string;
   paymentMethod: string;
   address: string;
-}
-
-export interface ChatMessage {
-  role: 'user' | 'model';
-  text: string;
 }
 
 export enum View {
