@@ -48,7 +48,7 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onAddToCart, o
         )}
       </div>
 
-      <div className="px-5 py-6 space-y-4">
+      <div className="px-5 py-6 space-y-6">
         <div>
           <h1 className="text-xl font-bold text-neutral-900 mb-1 leading-tight">{product.name}</h1>
           <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{product.category}</p>
@@ -69,16 +69,19 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onAddToCart, o
 
         {/* Sizes Selection */}
         {product.sizes && product.sizes.length > 0 && (
-          <div className="space-y-3 pt-2">
-             <h3 className="font-black text-[10px] uppercase tracking-[0.2em] text-neutral-900">Select Size</h3>
-             <div className="flex flex-wrap gap-2">
+          <div className="space-y-4 pt-2">
+             <h3 className="font-bold text-sm text-neutral-900">Selected Size: <span className="font-normal text-neutral-500">{selectedSize || 'None'}</span></h3>
+             <div className="flex flex-wrap gap-3">
                 {product.sizes.map(size => (
                   <button 
                     key={size}
                     onClick={() => setSelectedSize(size)}
-                    className={`min-w-[40px] h-[40px] flex items-center justify-center border text-xs font-black transition-all rounded-sm ${selectedSize === size ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-neutral-200 text-neutral-800'}`}
+                    className={`min-w-[100px] py-3 px-4 flex flex-col items-center justify-center border transition-all rounded-xl ${selectedSize === size ? 'bg-[#1a1a1a] border-[#1a1a1a] text-white' : 'bg-white border-neutral-200 text-neutral-500'}`}
                   >
-                    {size}
+                    <span className="text-sm font-bold">{size}</span>
+                    <span className={`text-[10px] mt-0.5 ${selectedSize === size ? 'text-neutral-400' : 'text-neutral-400'}`}>
+                      (₹{product.price.toLocaleString()})
+                    </span>
                   </button>
                 ))}
              </div>
@@ -92,29 +95,40 @@ const ProductDetails: React.FC<ProductDetailsProps> = ({ product, onAddToCart, o
 
         <div className="border-t border-neutral-100 pt-6">
           <h3 className="font-black text-xs mb-3 uppercase tracking-[0.2em] text-neutral-900">Product Narrative</h3>
-          <p className="text-sm text-neutral-600 leading-relaxed font-normal">{product.description}</p>
+          <p className="text-sm text-neutral-600 leading-relaxed font-normal mb-6">{product.description}</p>
+          
+          <button 
+            onClick={() => {
+              if (product.sizes?.length && !selectedSize) { alert("Please select a size"); return; }
+              onBuyNow(product, selectedSize || undefined);
+            }}
+            className="w-full bg-black text-white py-4 rounded-xl font-bold text-xs uppercase tracking-widest flex items-center justify-center gap-2 shadow-lg active:scale-95 transition-all"
+          >
+            <svg className="w-4 h-4 text-yellow-400" fill="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+            Instant Acquisition
+          </button>
         </div>
       </div>
 
       {/* Action Bar */}
-      <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-white border-t flex h-16 z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
+      <div className="fixed bottom-0 left-0 right-0 max-w-lg mx-auto bg-white border-t p-4 flex gap-3 z-50 shadow-[0_-4px_10px_rgba(0,0,0,0.05)]">
         <button 
           onClick={() => {
             if (product.sizes?.length && !selectedSize) { alert("Please select a size"); return; }
             onAddToCart(product, selectedSize || undefined);
           }}
-          className="flex-1 bg-white text-neutral-900 font-black flex items-center justify-center uppercase tracking-[0.1em] text-xs hover:bg-neutral-50 transition-colors border-r border-neutral-100"
+          className="flex-1 bg-white text-neutral-900 font-bold py-3.5 px-4 rounded-xl border border-neutral-300 text-sm hover:bg-neutral-50 transition-colors"
         >
-          Add to Bag
+          Add to cart
         </button>
         <button 
           onClick={() => {
             if (product.sizes?.length && !selectedSize) { alert("Please select a size"); return; }
             onBuyNow(product, selectedSize || undefined);
           }}
-          className="flex-1 bg-[#ff9f00] text-white font-black flex items-center justify-center uppercase tracking-[0.1em] text-xs hover:bg-[#f39700] transition-colors"
+          className="flex-1 bg-[#FFD700] text-neutral-900 font-bold py-3.5 px-4 rounded-xl text-sm hover:bg-[#fcc200] transition-colors"
         >
-          Buy Now
+          Buy at ₹{product.price.toLocaleString()}
         </button>
       </div>
     </div>

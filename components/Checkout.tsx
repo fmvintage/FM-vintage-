@@ -24,6 +24,8 @@ const Checkout: React.FC<CheckoutProps> = ({ cart, user, onPlaceOrder, onBack })
   const [subdivision, setSubdivision] = useState('');
   const [stateName, setStateName] = useState('');
   const [mobileNo, setMobileNo] = useState(user?.mobile || '');
+  const [paymentMethod, setPaymentMethod] = useState<'COD' | 'CASHFREE'>('CASHFREE');
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   const verificationStatuses = [
     "Finalizing Acquisition Record",
@@ -97,6 +99,55 @@ const Checkout: React.FC<CheckoutProps> = ({ cart, user, onPlaceOrder, onBack })
   }, [isVerifying, verificationStage]);
 
   const totalPrice = cart.reduce((acc, item) => acc + (item.price * item.quantity), 0);
+
+  const handlePlaceOrder = async () => {
+    if (paymentMethod === 'CASHFREE') {
+      await handleCashfreePayment();
+    } else {
+      setIsVerifying(true);
+    }
+  };
+
+  const handleCashfreePayment = async () => {
+    setIsProcessingPayment(true);
+    try {
+      // 1. Create order on our server
+      const response = await fetch('/api/cashfree/create-order', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderAmount: totalPrice,
+          customerId: user?.id || `guest_${Date.now()}`,
+          customerPhone: mobileNo,
+          customerEmail: user?.email || 'customer@fmvintage.com',
+          orderId: `ORD_${Date.now()}`
+        })
+      });
+
+      const orderData = await response.json();
+      
+      if (orderData.payment_session_id) {
+        // 2. Initialize Cashfree SDK
+        // @ts-ignore
+        const cashfree = Cashfree({
+          mode: "sandbox" // or "production"
+        });
+
+        // 3. Trigger Payment
+        await cashfree.checkout({
+          paymentSessionId: orderData.payment_session_id,
+          redirectTarget: "_self"
+        });
+      } else {
+        throw new Error("Failed to get payment session");
+      }
+    } catch (error) {
+      console.error("Payment Error:", error);
+      alert("Payment initiation failed. Please try again.");
+    } finally {
+      setIsProcessingPayment(false);
+    }
+  };
 
   const handleFinish = () => {
     const fullAddress = `${addressLine1}${addressLine2 ? ', ' + addressLine2 : ''}, Subdiv: ${subdivision}, Dist: ${district}, ${stateName} - ${pincode}`;
@@ -240,14 +291,33 @@ const Checkout: React.FC<CheckoutProps> = ({ cart, user, onPlaceOrder, onBack })
               </div>
 
               <div className="pt-4 space-y-4">
+                 <div className="space-y-2">
+                    <h3 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Payment Method</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                       <button 
+                         onClick={() => setPaymentMethod('CASHFREE')}
+                         className={`py-3 rounded-xl border-2 text-[10px] font-black uppercase tracking-widest transition-all ${paymentMethod === 'CASHFREE' ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-neutral-100 text-neutral-400'}`}
+                       >
+                         Online (Cashfree)
+                       </button>
+                       <button 
+                         onClick={() => setPaymentMethod('COD')}
+                         className={`py-3 rounded-xl border-2 text-[10px] font-black uppercase tracking-widest transition-all ${paymentMethod === 'COD' ? 'border-blue-600 bg-blue-50 text-blue-600' : 'border-neutral-100 text-neutral-400'}`}
+                       >
+                         Cash on Delivery
+                       </button>
+                    </div>
+                 </div>
+
                  <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest text-center leading-relaxed">
                    By confirming, you agree to the archive acquisition terms. Your order will be processed for standard delivery.
                  </p>
                  <button 
-                   onClick={() => setIsVerifying(true)}
-                   className="w-full bg-blue-600 text-white py-5 font-black rounded-sm uppercase tracking-[0.3em] text-[10px] shadow-2xl active:scale-95 transition-all"
+                   onClick={handlePlaceOrder}
+                   disabled={isProcessingPayment}
+                   className="w-full bg-blue-600 text-white py-5 font-black rounded-sm uppercase tracking-[0.3em] text-[10px] shadow-2xl active:scale-95 transition-all disabled:bg-neutral-300"
                  >
-                   Confirm Order
+                   {isProcessingPayment ? 'Initiating Payment...' : paymentMethod === 'CASHFREE' ? 'Pay & Confirm Order' : 'Confirm Order (COD)'}
                  </button>
               </div>
            </div>

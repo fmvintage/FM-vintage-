@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { View, Product, CartItem, User, Order } from './types';
 import { MOCK_PRODUCTS, CATEGORIES } from './constants';
